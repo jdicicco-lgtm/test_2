@@ -1,0 +1,1001 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8" />
+  <title>Fleet & Booking Dashboard – Wide View</title>
+  <script src="https://cdn.plot.ly/plotly-2.32.0.min.js"></script>
+  <style>
+    :root {
+      --bg: #020617;
+      --bg-elevated: #020819;
+      --card: #0b1220;
+      --accent: #ef4444;
+      --accent-soft: rgba(239,68,68,0.16);
+      --accent-2: #22c55e;
+      --text: #e5e7eb;
+      --muted: #9ca3af;
+      --border: #1f2937;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: radial-gradient(circle at top, #111827 0, #020617 45%);
+      color: var(--text);
+    }
+
+    .page {
+      max-width: 1480px;
+      margin: 0 auto;
+      padding: 26px 28px 40px;
+    }
+
+    header {
+      margin-bottom: 18px;
+    }
+
+    .title-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 28px;
+      letter-spacing: 0.02em;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .badge {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      padding: 3px 9px;
+      border-radius: 999px;
+      background: var(--accent-soft);
+      color: var(--accent);
+      border: 1px solid rgba(239,68,68,0.55);
+    }
+
+    .subtitle {
+      margin-top: 6px;
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    .header-meta {
+      text-align: right;
+      font-size: 11px;
+      color: var(--muted);
+    }
+
+    .header-meta span {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 2px 8px;
+      border-radius: 999px;
+      background: rgba(15,23,42,0.9);
+      border: 1px solid var(--border);
+      margin-left: 4px;
+    }
+
+    .dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 999px;
+      background: var(--accent);
+    }
+
+    .filters-bar {
+      margin-top: 18px;
+      background: rgba(10,15,30,0.96);
+      border-radius: 18px;
+      padding: 12px 14px;
+      border: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      box-shadow: 0 18px 40px rgba(0,0,0,0.55);
+      flex-wrap: wrap;
+    }
+
+    .filters-bar-label {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: var(--muted);
+      white-space: nowrap;
+    }
+
+    .filters-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      flex: 1;
+    }
+
+    .filter {
+      min-width: 140px;
+    }
+
+    .filter label {
+      display: block;
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--muted);
+      margin-bottom: 3px;
+    }
+
+    select {
+      width: 100%;
+      padding: 6px 10px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: #020617;
+      color: var(--text);
+      font-size: 12px;
+      outline: none;
+      appearance: none;
+      background-image: linear-gradient(45deg, transparent 50%, #6b7280 50%),
+                        linear-gradient(135deg, #6b7280 50%, transparent 50%);
+      background-position: calc(100% - 12px) 10px, calc(100% - 8px) 10px;
+      background-size: 4px 4px, 4px 4px;
+      background-repeat: no-repeat;
+    }
+
+    select:focus {
+      border-color: #4b5563;
+    }
+
+    .filters-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .btn {
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: #020617;
+      color: var(--text);
+      padding: 6px 12px;
+      font-size: 12px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: background 0.15s ease, border-color 0.15s ease, transform 0.12s ease;
+      white-space: nowrap;
+    }
+
+    .btn:hover {
+      background: #111827;
+      border-color: #374151;
+      transform: translateY(-0.5px);
+    }
+
+    .btn-icon {
+      font-size: 14px;
+      opacity: 0.8;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #ef4444, #f97316);
+      border: none;
+    }
+
+    .btn-primary:hover {
+      filter: brightness(1.05);
+    }
+
+    .content {
+      margin-top: 20px;
+      display: grid;
+      grid-template-rows: auto auto;
+      gap: 18px;
+    }
+
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .kpi-card {
+      background: var(--card);
+      border-radius: 18px;
+      padding: 14px 14px 12px;
+      border: 1px solid var(--border);
+      box-shadow: 0 20px 40px rgba(0,0,0,0.55);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .kpi-card::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at top right, rgba(239,68,68,0.16), transparent 55%);
+      opacity: 0;
+      transition: opacity 0.2s ease;
+      pointer-events: none;
+    }
+
+    .kpi-card:hover::before { opacity: 1; }
+
+    .kpi-label {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--muted);
+    }
+
+    .kpi-value {
+      margin-top: 6px;
+      font-size: 22px;
+      font-weight: 600;
+    }
+
+    .kpi-sub {
+      margin-top: 4px;
+      font-size: 11px;
+      color: var(--muted);
+    }
+
+    .kpi-tag {
+      position: absolute;
+      top: 10px;
+      right: 12px;
+      font-size: 10px;
+      padding: 2px 8px;
+      border-radius: 999px;
+      background: rgba(15,23,42,0.9);
+      border: 1px solid var(--border);
+      color: var(--muted);
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .kpi-tag-dot {
+      width: 5px;
+      height: 5px;
+      border-radius: 999px;
+      background: var(--accent);
+    }
+
+    .charts-grid {
+      display: grid;
+      grid-template-columns: 2.1fr 1.4fr;
+      gap: 16px;
+    }
+
+    .charts-row-bottom {
+      margin-top: 4px;
+      display: grid;
+      grid-template-columns: 1.5fr 1.5fr;
+      gap: 16px;
+    }
+
+    .chart-card {
+      background: var(--card);
+      border-radius: 18px;
+      padding: 12px 14px 14px;
+      border: 1px solid var(--border);
+      box-shadow: 0 20px 40px rgba(0,0,0,0.55);
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      min-height: 260px;
+    }
+
+    .chart-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 10px;
+    }
+
+    .chart-title {
+      font-size: 14px;
+      font-weight: 500;
+    }
+
+    .chart-sub {
+      font-size: 11px;
+      color: var(--muted);
+    }
+
+    .chart-meta {
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+    }
+
+    .chart-body {
+      margin-top: 6px;
+      flex: 1;
+    }
+
+    .chart-footnote {
+      margin-top: 4px;
+      font-size: 10px;
+      color: var(--muted);
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .chip {
+      padding: 2px 8px;
+      border-radius: 999px;
+      background: rgba(15,23,42,0.9);
+      border: 1px solid var(--border);
+    }
+
+    @media (max-width: 1200px) {
+      .kpi-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+      .charts-grid {
+        grid-template-columns: minmax(0, 1fr);
+      }
+      .charts-row-bottom {
+        grid-template-columns: minmax(0, 1fr);
+      }
+    }
+
+    @media (max-width: 860px) {
+      .filters-bar {
+        align-items: flex-start;
+      }
+      .filters-actions {
+        width: 100%;
+        justify-content: flex-end;
+      }
+    }
+
+    @media (max-width: 640px) {
+      .kpi-grid {
+        grid-template-columns: minmax(0, 1fr);
+      }
+      .filters-bar-label {
+        width: 100%;
+      }
+      .filters-row {
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <header>
+      <div class="title-row">
+        <div>
+          <h1>
+            Fleet & Booking – Wide View
+            <span class="badge">2024 · 2025 · 2026</span>
+          </h1>
+          <div class="subtitle">
+            Vista ampia della performance flotta e prenotazioni, con focus su costi, revenue e mix di tipologia.
+          </div>
+        </div>
+        <div class="header-meta">
+          <div>
+            <span><span class="dot"></span> Flotta: canoni &amp; assicurazioni</span>
+            <span><span class="dot" style="background:#22c55e;"></span> Booking: revenue &amp; volumi</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="filters-bar">
+        <div class="filters-bar-label">Filtri</div>
+        <div class="filters-row">
+          <div class="filter">
+            <label for="filter-year">Anno</label>
+            <select id="filter-year">
+              <option value="">Tutti</option>
+            </select>
+          </div>
+          <div class="filter">
+            <label for="filter-month">Mese</label>
+            <select id="filter-month">
+              <option value="">Tutti</option>
+            </select>
+          </div>
+          <div class="filter">
+            <label for="filter-tipologia">Tipologia</label>
+            <select id="filter-tipologia">
+              <option value="">Tutte</option>
+            </select>
+          </div>
+          <div class="filter">
+            <label for="filter-gruppo">Gruppo veicolo</label>
+            <select id="filter-gruppo">
+              <option value="">Tutti</option>
+            </select>
+          </div>
+          <div class="filter">
+            <label for="filter-acquisizione">Acquisizione</label>
+            <select id="filter-acquisizione">
+              <option value="">Tutte</option>
+            </select>
+          </div>
+        </div>
+        <div class="filters-actions">
+          <button id="btn-reset" class="btn">
+            <span class="btn-icon">↺</span>
+            Pulisci filtri
+          </button>
+          <button class="btn btn-primary">
+            <span class="btn-icon">●</span>
+            Live
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <div class="content">
+      <!-- KPI -->
+      <section class="kpi-grid">
+        <div class="kpi-card">
+          <div class="kpi-label">Dimensione flotta (media)</div>
+          <div id="kpi-fleet-size" class="kpi-value">–</div>
+          <div class="kpi-sub">Veicoli medi nel periodo selezionato</div>
+          <div class="kpi-tag">
+            <span class="kpi-tag-dot"></span> Fleet
+          </div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Costo totale flotta</div>
+          <div id="kpi-cost-total" class="kpi-value">–</div>
+          <div class="kpi-sub">Canoni imponibili + coperture assicurative</div>
+          <div class="kpi-tag">
+            <span class="kpi-tag-dot" style="background:#f97316;"></span> Cost
+          </div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Revenue prenotazioni</div>
+          <div id="kpi-revenue" class="kpi-value">–</div>
+          <div class="kpi-sub">Revenue con proiezioni 2024 (-5%) e 2026 (+10%)</div>
+          <div class="kpi-tag">
+            <span class="kpi-tag-dot" style="background:#22c55e;"></span> Revenue
+          </div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Cost / Rev ratio</div>
+          <div id="kpi-cost-rev" class="kpi-value">–</div>
+          <div class="kpi-sub">Costo totale flotta / revenue</div>
+          <div class="kpi-tag">
+            <span class="kpi-tag-dot" style="background:#eab308;"></span> Margine
+          </div>
+        </div>
+      </section>
+
+      <!-- Charts -->
+      <section>
+        <div class="charts-grid">
+          <div class="chart-card">
+            <div class="chart-header">
+              <div>
+                <div class="chart-title">Andamento mensile costi &amp; revenue</div>
+                <div class="chart-sub">Trend combinato flotta e booking per mese</div>
+              </div>
+              <div id="meta-main-trend" class="chart-meta">–</div>
+            </div>
+            <div id="chart-main-trend" class="chart-body"></div>
+            <div class="chart-footnote">
+              <span class="chip">Barre: costo totale flotta · Linea: revenue</span>
+              <span id="note-main-trend"></span>
+            </div>
+          </div>
+
+          <div class="chart-card">
+            <div class="chart-header">
+              <div>
+                <div class="chart-title">Mix flotta per tipologia</div>
+                <div class="chart-sub">Quota % della dimensione media per tipologia</div>
+              </div>
+              <div id="meta-fleet-mix" class="chart-meta">–</div>
+            </div>
+            <div id="chart-fleet-mix" class="chart-body"></div>
+            <div class="chart-footnote">
+              <span class="chip">Anello: peso % sul totale flotta</span>
+              <span id="note-fleet-mix"></span>
+            </div>
+          </div>
+        </div>
+
+        <div class="charts-row-bottom">
+          <div class="chart-card">
+            <div class="chart-header">
+              <div>
+                <div class="chart-title">Booking per anno</div>
+                <div class="chart-sub">Volumi prenotazioni e revenue per anno</div>
+              </div>
+              <div id="meta-booking-year" class="chart-meta">–</div>
+            </div>
+            <div id="chart-booking-year" class="chart-body"></div>
+            <div class="chart-footnote">
+              <span class="chip">Barre: # prenotazioni · Linea: revenue</span>
+              <span id="note-booking-year"></span>
+            </div>
+          </div>
+
+          <div class="chart-card">
+            <div class="chart-header">
+              <div>
+                <div class="chart-title">Cost vs Revenue per gruppo veicolo</div>
+                <div class="chart-sub">Confronto per gruppo nel periodo filtrato</div>
+              </div>
+              <div id="meta-cargroup" class="chart-meta">Per gruppo · filtri attivi</div>
+            </div>
+            <div id="chart-cargroup" class="chart-body"></div>
+            <div class="chart-footnote">
+              <span class="chip">Barre affiancate: costo vs revenue</span>
+              <span id="note-cargroup"></span>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <script>
+    const monthNames = ["Gen", "Feb", "Mar", "Apr", "Mag", "Giu", "Lug", "Ago", "Set", "Ott", "Nov", "Dic"];
+
+    function formatCurrency(v) {
+      if (!isFinite(v) || v === 0) return "€0";
+      const abs = Math.abs(v);
+      let value = v;
+      let suffix = "";
+      if (abs >= 1_000_000) {
+        value = v / 1_000_000;
+        suffix = "M";
+      } else if (abs >= 1_000) {
+        value = v / 1_000;
+        suffix = "K";
+      }
+      return "€" + value.toLocaleString("it-IT", {
+        maximumFractionDigits: 1,
+        minimumFractionDigits: 0
+      }) + suffix;
+    }
+
+    function formatNumber(v) {
+      if (!isFinite(v)) return "0";
+      return v.toLocaleString("it-IT", { maximumFractionDigits: 0 });
+    }
+
+    function formatFloat(v, decimals = 1) {
+      if (!isFinite(v)) return "0";
+      return v.toLocaleString("it-IT", {
+        maximumFractionDigits: decimals,
+        minimumFractionDigits: decimals
+      });
+    }
+
+    function groupKey(y, m) {
+      return `${y}-${String(m).padStart(2, "0")}`;
+    }
+
+    function parseJsonSafe(text, label) {
+      try {
+        const cleaned = text.replace(/NaN/g, "null");
+        return JSON.parse(cleaned);
+      } catch (e) {
+        console.error(`Errore parsing ${label}:`, e);
+        return [];
+      }
+    }
+
+    let fleetData = [];
+    let bookingData = [];
+
+    const filters = {
+      year: "",
+      month: "",
+      tipologia: "",
+      gruppo: "",
+      acquisizione: ""
+    };
+
+    const yearSelect = document.getElementById("filter-year");
+    const monthSelect = document.getElementById("filter-month");
+    const tipologiaSelect = document.getElementById("filter-tipologia");
+    const gruppoSelect = document.getElementById("filter-gruppo");
+    const acquisizioneSelect = document.getElementById("filter-acquisizione");
+    const resetBtn = document.getElementById("btn-reset");
+
+    const kpiFleetSize = document.getElementById("kpi-fleet-size");
+    const kpiCostTotal = document.getElementById("kpi-cost-total");
+    const kpiRevenue = document.getElementById("kpi-revenue");
+    const kpiCostRev = document.getElementById("kpi-cost-rev");
+
+    const metaMainTrend = document.getElementById("meta-main-trend");
+    const noteMainTrend = document.getElementById("note-main-trend");
+    const metaFleetMix = document.getElementById("meta-fleet-mix");
+    const noteFleetMix = document.getElementById("note-fleet-mix");
+    const metaBookingYear = document.getElementById("meta-booking-year");
+    const noteBookingYear = document.getElementById("note-booking-year");
+    const metaCargroup = document.getElementById("meta-cargroup");
+    const noteCargroup = document.getElementById("note-cargroup");
+
+    // Load data
+    Promise.all([
+      fetch("fleet_agg.json").then(r => r.text()),
+      fetch("bookings_agg.json").then(r => r.text())
+    ])
+      .then(([fleetText, bookingsText]) => {
+        const fleet = parseJsonSafe(fleetText, "fleet_agg.json");
+        const bookings = parseJsonSafe(bookingsText, "bookings_agg.json");
+
+        fleetData = fleet.map(d => ({
+          Year: d.Year,
+          Month: d.Month,
+          TIPOLOGIA: d.TIPOLOGIA || null,
+          GRUPPO: d.GRUPPO || null,
+          ACQUISIZIONE: d.ACQUISIZIONE || null,
+          fleet_size: +d.fleet_size || 0,
+          canone_imponibile: +d.canone_imponibile || 0,
+          assicurazione: +d.assicurazione || 0,
+          costo_totale:
+            +d.costo_totale ||
+            (+d.canone_imponibile || 0) + (+d.assicurazione || 0)
+        }));
+
+        bookingData = bookings.map(d => ({
+          Year: d.Year,
+          Month: d.Month,
+          TIPOLOGIA: d.TIPOLOGIA || null,
+          GRUPPO: d.GRUPPO || null,
+          ACQUISIZIONE: d.ACQUISIZIONE || null,
+          bookings: +d.bookings || 0,
+          revenue: +d.revenue || 0,
+          days: +d.days || 0,
+          rev_per_day: +d.rev_per_day || 0
+        }));
+
+        initFilters();
+        applyFiltersAndUpdate();
+      })
+      .catch(err => {
+        console.error("Errore nel caricamento JSON:", err);
+      });
+
+    function initFilters() {
+      const years = new Set();
+      const months = new Set();
+      const tipologie = new Set();
+      const gruppi = new Set();
+      const acquisizioni = new Set();
+
+      const allData = [...fleetData, ...bookingData];
+      allData.forEach(d => {
+        if (d.Year) years.add(d.Year);
+        if (d.Month) months.add(d.Month);
+        if (d.TIPOLOGIA) tipologie.add(d.TIPOLOGIA);
+        if (d.GRUPPO) gruppi.add(d.GRUPPO);
+        if (d.ACQUISIZIONE) acquisizioni.add(d.ACQUISIZIONE);
+      });
+
+      [...years].sort((a, b) => a - b).forEach(y => {
+        const opt = document.createElement("option");
+        opt.value = y;
+        opt.textContent = y;
+        yearSelect.appendChild(opt);
+      });
+
+      [...months].sort((a, b) => a - b).forEach(m => {
+        const opt = document.createElement("option");
+        opt.value = m;
+        opt.textContent = `${String(m).padStart(2, "0")} - ${monthNames[m-1]}`;
+        monthSelect.appendChild(opt);
+      });
+
+      [...tipologie].sort().forEach(t => {
+        const opt = document.createElement("option");
+        opt.value = t;
+        opt.textContent = t;
+        tipologiaSelect.appendChild(opt);
+      });
+
+      [...gruppi].sort().forEach(g => {
+        const opt = document.createElement("option");
+        opt.value = g;
+        opt.textContent = g;
+        gruppoSelect.appendChild(opt);
+      });
+
+      [...acquisizioni].sort().forEach(a => {
+        const opt = document.createElement("option");
+        opt.value = a;
+        opt.textContent = a;
+        acquisizioneSelect.appendChild(opt);
+      });
+
+      yearSelect.addEventListener("change", () => {
+        filters.year = yearSelect.value;
+        applyFiltersAndUpdate();
+      });
+      monthSelect.addEventListener("change", () => {
+        filters.month = monthSelect.value;
+        applyFiltersAndUpdate();
+      });
+      tipologiaSelect.addEventListener("change", () => {
+        filters.tipologia = tipologiaSelect.value;
+        applyFiltersAndUpdate();
+      });
+      gruppoSelect.addEventListener("change", () => {
+        filters.gruppo = gruppoSelect.value;
+        applyFiltersAndUpdate();
+      });
+      acquisizioneSelect.addEventListener("change", () => {
+        filters.acquisizione = acquisizioneSelect.value;
+        applyFiltersAndUpdate();
+      });
+
+      resetBtn.addEventListener("click", () => {
+        filters.year = "";
+        filters.month = "";
+        filters.tipologia = "";
+        filters.gruppo = "";
+        filters.acquisizione = "";
+        yearSelect.value = "";
+        monthSelect.value = "";
+        tipologiaSelect.value = "";
+        gruppoSelect.value = "";
+        acquisizioneSelect.value = "";
+        applyFiltersAndUpdate();
+      });
+    }
+
+    function applyFiltersAndUpdate() {
+      const fleetFiltered = fleetData.filter(d => {
+        if (filters.year && d.Year != filters.year) return false;
+        if (filters.month && d.Month != filters.month) return false;
+        if (filters.tipologia && d.TIPOLOGIA !== filters.tipologia) return false;
+        if (filters.gruppo && d.GRUPPO !== filters.gruppo) return false;
+        if (filters.acquisizione && d.ACQUISIZIONE !== filters.acquisizione) return false;
+        return true;
+      });
+
+      const bookingFiltered = bookingData.filter(d => {
+        if (filters.year && d.Year != filters.year) return false;
+        if (filters.month && d.Month != filters.month) return false;
+        if (filters.tipologia && d.TIPOLOGIA !== filters.tipologia) return false;
+        if (filters.gruppo && d.GRUPPO !== filters.gruppo) return false;
+        if (filters.acquisizione && d.ACQUISIZIONE !== filters.acquisizione) return false;
+        return true;
+      });
+
+      updateKpiCards(fleetFiltered, bookingFiltered);
+      updateCharts(fleetFiltered, bookingFiltered);
+    }
+
+    function updateKpiCards(fleetList, bookingList) {
+      let fleetAverage = 0;
+      let sumCost = 0;
+
+      if (fleetList.length === 0) {
+        kpiFleetSize.textContent = "–";
+        kpiCostTotal.textContent = "–";
+      } else {
+        const monthlyTotals = {};
+        fleetList.forEach(d => {
+          const k = groupKey(d.Year, d.Month);
+          if (!monthlyTotals[k]) monthlyTotals[k] = 0;
+          monthlyTotals[k] += d.fleet_size || 0;
+          sumCost += d.costo_totale || ((d.canone_imponibile || 0) + (d.assicurazione || 0));
+        });
+        const vals = Object.values(monthlyTotals);
+        fleetAverage = vals.length ? vals.reduce((a,b)=>a+b,0)/vals.length : 0;
+
+        kpiFleetSize.textContent = formatFloat(fleetAverage, 1);
+        kpiCostTotal.textContent = formatCurrency(sumCost);
+      }
+
+      let sumRev = 0;
+      if (bookingList.length === 0) {
+        kpiRevenue.textContent = "–";
+        kpiCostRev.textContent = "–";
+      } else {
+        sumRev = bookingList.reduce((s,d)=>s+(d.revenue||0),0);
+        kpiRevenue.textContent = formatCurrency(sumRev);
+
+        if (sumRev > 0 && sumCost > 0) {
+          const ratio = (sumCost / sumRev) * 100;
+          kpiCostRev.textContent = formatFloat(ratio,1) + "%";
+        } else {
+          kpiCostRev.textContent = "–";
+        }
+      }
+    }
+
+    function updateCharts(fleetList, bookingList) {
+      const yearLabel = filters.year || "2024–2026";
+      const monthLabel = filters.month ? monthNames[parseInt(filters.month)-1] : "tutti i mesi";
+      const segLabel = [
+        filters.tipologia || "tutte le tipologie",
+        filters.gruppo || "tutti i gruppi",
+        filters.acquisizione || "tutte le acquisizioni"
+      ].join(" · ");
+
+      // MAIN TREND (costo vs revenue)
+      metaMainTrend.textContent = `${yearLabel} · ${monthLabel}`;
+      noteMainTrend.textContent = segLabel;
+
+      if (fleetList.length === 0 && bookingList.length === 0) {
+        Plotly.newPlot("chart-main-trend", [], {
+          paper_bgcolor:"rgba(0,0,0,0)", plot_bgcolor:"rgba(0,0,0,0)",
+          xaxis:{visible:false}, yaxis:{visible:false},
+          annotations:[{text:"Nessun dato per i filtri selezionati", x:0.5,y:0.5, xref:"paper",yref:"paper",showarrow:false,font:{color:"#9ca3af"}}],
+          margin:{t:10,r:10,b:10,l:10}
+        }, {displayModeBar:false});
+      } else {
+        const aggMonth = {};
+        fleetList.forEach(d=>{
+          const k = groupKey(d.Year,d.Month);
+          if(!aggMonth[k]) aggMonth[k]={Year:d.Year,Month:d.Month,costo:0,revenue:0};
+          aggMonth[k].costo += d.costo_totale || 0;
+        });
+        bookingList.forEach(d=>{
+          const k = groupKey(d.Year,d.Month);
+          if(!aggMonth[k]) aggMonth[k]={Year:d.Year,Month:d.Month,costo:0,revenue:0};
+          aggMonth[k].revenue += d.revenue || 0;
+        });
+
+        const keys = Object.keys(aggMonth).sort();
+        const x = keys.map(k=>{
+          const o = aggMonth[k];
+          return `${o.Year} ${monthNames[o.Month-1]}`;
+        });
+        const costs = keys.map(k=>aggMonth[k].costo);
+        const revs = keys.map(k=>aggMonth[k].revenue);
+
+        const barCost = {x, y:costs, type:"bar", name:"Costo totale", opacity:0.9};
+        const lineRev = {x, y:revs, type:"scatter", mode:"lines+markers", name:"Revenue", yaxis:"y2"};
+
+        Plotly.newPlot("chart-main-trend",[barCost,lineRev],{
+          paper_bgcolor:"rgba(0,0,0,0)",
+          plot_bgcolor:"rgba(0,0,0,0)",
+          margin:{t:10,r:40,b:45,l:50},
+          xaxis:{tickangle:-35,tickfont:{size:10,color:"#9ca3af"}},
+          yaxis:{title:"Costo",titlefont:{size:11,color:"#9ca3af"},tickfont:{size:10,color:"#9ca3af"},gridcolor:"#1f2937"},
+          yaxis2:{title:"Revenue",overlaying:"y",side:"right",titlefont:{size:11,color:"#9ca3af"},tickfont:{size:10,color:"#9ca3af"}},
+          legend:{orientation:"h",y:1.12,x:0,font:{size:10,color:"#e5e7eb"}}
+        }, {displayModeBar:false});
+      }
+
+      // FLEET MIX TIPOLGIA (donut)
+      metaFleetMix.textContent = yearLabel;
+      noteFleetMix.textContent = segLabel;
+
+      if (fleetList.length === 0) {
+        Plotly.newPlot("chart-fleet-mix", [], {
+          paper_bgcolor:"rgba(0,0,0,0)", plot_bgcolor:"rgba(0,0,0,0)",
+          xaxis:{visible:false}, yaxis:{visible:false},
+          annotations:[{text:"Nessun dato flotta per i filtri selezionati", x:0.5,y:0.5,xref:"paper",yref:"paper",showarrow:false,font:{color:"#9ca3af"}}],
+          margin:{t:10,r:10,b:10,l:10}
+        }, {displayModeBar:false});
+      } else {
+        const aggTip = {};
+        fleetList.forEach(d=>{
+          const t = d.TIPOLOGIA || "N.D.";
+          if(!aggTip[t]) aggTip[t]=0;
+          aggTip[t]+= d.fleet_size || 0;
+        });
+        const labels = Object.keys(aggTip);
+        const values = labels.map(l=>aggTip[l]);
+
+        Plotly.newPlot("chart-fleet-mix",[{
+          labels, values, type:"pie", hole:0.55,
+          textinfo:"label+percent", hoverinfo:"label+value+percent"
+        }],{
+          paper_bgcolor:"rgba(0,0,0,0)",
+          plot_bgcolor:"rgba(0,0,0,0)",
+          margin:{t:10,r:10,b:10,l:10},
+          showlegend:false
+        },{displayModeBar:false});
+      }
+
+      // BOOKING PER ANNO
+      metaBookingYear.textContent = "Tutti gli anni";
+      noteBookingYear.textContent = segLabel;
+
+      if (bookingList.length === 0) {
+        Plotly.newPlot("chart-booking-year", [], {
+          paper_bgcolor:"rgba(0,0,0,0)", plot_bgcolor:"rgba(0,0,0,0)",
+          xaxis:{visible:false}, yaxis:{visible:false},
+          annotations:[{text:"Nessun dato prenotazioni",x:0.5,y:0.5,xref:"paper",yref:"paper",showarrow:false,font:{color:"#9ca3af"}}],
+          margin:{t:10,r:10,b:10,l:10}
+        },{displayModeBar:false});
+      } else {
+        const aggYear = {};
+        bookingList.forEach(d=>{
+          const y = d.Year || "N.D.";
+          if(!aggYear[y]) aggYear[y]={bookings:0,revenue:0};
+          aggYear[y].bookings += d.bookings || 0;
+          aggYear[y].revenue += d.revenue || 0;
+        });
+        const years = Object.keys(aggYear).sort();
+        const bVal = years.map(y=>aggYear[y].bookings);
+        const rVal = years.map(y=>aggYear[y].revenue);
+
+        const barB = {x:years, y:bVal, type:"bar", name:"Prenotazioni", opacity:0.9};
+        const lineR = {x:years, y:rVal, type:"scatter", mode:"lines+markers", name:"Revenue", yaxis:"y2"};
+
+        Plotly.newPlot("chart-booking-year",[barB,lineR],{
+          paper_bgcolor:"rgba(0,0,0,0)",
+          plot_bgcolor:"rgba(0,0,0,0)",
+          margin:{t:10,r:40,b:35,l:45},
+          xaxis:{tickfont:{size:11,color:"#9ca3af"}},
+          yaxis:{title:"# Booking",titlefont:{size:11,color:"#9ca3af"},tickfont:{size:10,color:"#9ca3af"},gridcolor:"#1f2937"},
+          yaxis2:{title:"Revenue",overlaying:"y",side:"right",titlefont:{size:11,color:"#9ca3af"},tickfont:{size:10,color:"#9ca3af"}},
+          legend:{orientation:"h",y:1.12,x:0,font:{size:10,color:"#e5e7eb"}}
+        },{displayModeBar:false});
+      }
+
+      // COST VS REVENUE PER CARGROUP
+      noteCargroup.textContent = segLabel;
+
+      if (fleetList.length === 0 && bookingList.length === 0) {
+        Plotly.newPlot("chart-cargroup", [], {
+          paper_bgcolor:"rgba(0,0,0,0)", plot_bgcolor:"rgba(0,0,0,0)",
+          xaxis:{visible:false}, yaxis:{visible:false},
+          annotations:[{text:"Nessun dato per gruppi veicolo",x:0.5,y:0.5,xref:"paper",yref:"paper",showarrow:false,font:{color:"#9ca3af"}}],
+          margin:{t:10,r:10,b:10,l:10}
+        },{displayModeBar:false});
+      } else {
+        const aggG = {};
+        fleetList.forEach(d=>{
+          const g = d.GRUPPO || "N.D.";
+          if(!aggG[g]) aggG[g]={costo:0,revenue:0};
+          aggG[g].costo += d.costo_totale || 0;
+        });
+        bookingList.forEach(d=>{
+          const g = d.GRUPPO || "N.D.";
+          if(!aggG[g]) aggG[g]={costo:0,revenue:0};
+          aggG[g].revenue += d.revenue || 0;
+        });
+
+        const groups = Object.keys(aggG);
+        groups.sort((a,b)=>{
+          const A=aggG[a], B=aggG[b];
+          if(B.revenue!==A.revenue) return B.revenue-A.revenue;
+          return B.costo-A.costo;
+        });
+
+        const xG = groups;
+        const costG = xG.map(g=>aggG[g].costo);
+        const revG = xG.map(g=>aggG[g].revenue);
+
+        const barCost = {x:xG, y:costG, type:"bar", name:"Costo flotta", opacity:0.85};
+        const barRev  = {x:xG, y:revG, type:"bar", name:"Revenue", opacity:0.85};
+
+        Plotly.newPlot("chart-cargroup",[barCost,barRev],{
+          barmode:"group",
+          paper_bgcolor:"rgba(0,0,0,0)",
+          plot_bgcolor:"rgba(0,0,0,0)",
+          margin:{t:10,r:30,b:60,l:50},
+          xaxis:{title:"Gruppo veicolo",titlefont:{size:11,color:"#9ca3af"},tickangle:-35,tickfont:{size:10,color:"#9ca3af"}},
+          yaxis:{title:"Valore totale",titlefont:{size:11,color:"#9ca3af"},tickfont:{size:10,color:"#9ca3af"},gridcolor:"#1f2937"},
+          legend:{orientation:"h",y:1.12,x:0,font:{size:10,color:"#e5e7eb"}}
+        },{displayModeBar:false});
+      }
+    }
+  </script>
+</body>
+</html>
