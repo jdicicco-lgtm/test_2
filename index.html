@@ -504,24 +504,58 @@
       let bookingsPrev = [];
 
       if (prevPeriod.year) {
-        fleetPrev = filterDataset(fleetData, prevPeriod.year, prevPeriod.month ?? (month === "All" ? "All" : null), group);
-        bookingsPrev = filterDataset(bookingsData, prevPeriod.year, prevPeriod.month ?? (month === "All" ? "All" : null), group);
+        fleetPrev = filterDataset(
+          fleetData,
+          prevPeriod.year,
+          prevPeriod.month ?? (month === "All" ? "All" : null),
+          group
+        );
+        bookingsPrev = filterDataset(
+          bookingsData,
+          prevPeriod.year,
+          prevPeriod.month ?? (month === "All" ? "All" : null),
+          group
+        );
       }
 
       const prevKpis = computeKPIs(fleetPrev, bookingsPrev);
 
       // KPI CARDS
-      updateKpiCard("kpi-fleet-main", "kpi-fleet-prev", "kpi-fleet-delta", currentKpis.fleet,
-        fleetPrev.length ? prevKpis.fleet : null, false);
+      updateKpiCard(
+        "kpi-fleet-main",
+        "kpi-fleet-prev",
+        "kpi-fleet-delta",
+        currentKpis.fleet,
+        fleetPrev.length ? prevKpis.fleet : null,
+        false
+      );
 
-      updateKpiCard("kpi-lease-main", "kpi-lease-prev", "kpi-lease-delta", currentKpis.lease,
-        fleetPrev.length ? prevKpis.lease : null, true);
+      updateKpiCard(
+        "kpi-lease-main",
+        "kpi-lease-prev",
+        "kpi-lease-delta",
+        currentKpis.lease,
+        fleetPrev.length ? prevKpis.lease : null,
+        true
+      );
 
-      updateKpiCard("kpi-ins-main", "kpi-ins-prev", "kpi-ins-delta", currentKpis.insurance,
-        fleetPrev.length ? prevKpis.insurance : null, true);
+      updateKpiCard(
+        "kpi-ins-main",
+        "kpi-ins-prev",
+        "kpi-ins-delta",
+        currentKpis.insurance,
+        fleetPrev.length ? prevKpis.insurance : null,
+        true
+      );
 
-      updateKpiCard("kpi-rev-main", "kpi-rev-prev", "kpi-rev-delta", currentKpis.revenue,
-        bookingsPrev.length ? prevKpis.revenue : null, true);
+      updateKpiCard(
+        "kpi-rev-main",
+        "kpi-rev-prev",
+        "kpi-rev-delta",
+        currentKpis.revenue,
+        bookingsPrev.length ? prevKpis.revenue : null,
+        true
+      );
 
       // SUBTITLES
       const subtitle = month && month !== "All"
@@ -532,7 +566,7 @@
       document.getElementById("fleetSubtitle").textContent = `Period: ${subtitle}${prevLabel}`;
       document.getElementById("bookingsSubtitle").textContent = `Period: ${subtitle}${prevLabel}`;
 
-      // CHARTS (semplici, per dare contesto)
+      // CHARTS
       renderCharts(year, group);
     }
 
@@ -649,6 +683,7 @@
       groupSelect.addEventListener("change", updateDashboard);
     }
 
+    // QUI c'è la versione con "pulizia" di NaN / Infinity
     async function loadData() {
       try {
         const [fleetRes, bookingsRes] = await Promise.all([
@@ -656,8 +691,21 @@
           fetch("bookings_agg.json")
         ]);
 
-        fleetData = await fleetRes.json();
-        bookingsData = await bookingsRes.json();
+        const fleetText = await fleetRes.text();
+        const bookingsText = await bookingsRes.text();
+
+        const safeFleetText = fleetText
+          .replace(/\bNaN\b/g, "null")
+          .replace(/\bInfinity\b/g, "null")
+          .replace(/\b-Infinity\b/g, "null");
+
+        const safeBookingsText = bookingsText
+          .replace(/\bNaN\b/g, "null")
+          .replace(/\bInfinity\b/g, "null")
+          .replace(/\b-Infinity\b/g, "null");
+
+        fleetData = JSON.parse(safeFleetText);
+        bookingsData = JSON.parse(safeBookingsText);
 
         initFilters();
         updateDashboard();
